@@ -3,16 +3,18 @@
 #include <cmath>
 #include <iomanip>
 #include <algorithm>
+#include <windows.h>
+#include <cstdlib>
 
 using namespace std;
 
 const double PI = acos(-1.0);
 
 #define RESET  "\033[0m"
-#define RED    "\033[1;31m" 
+#define RED    "\033[1;31m"
 #define GREEN  "\033[1;32m"
 #define YELLOW "\033[1;33m"
-#define CYAN   "\033[1;36m"   
+#define CYAN   "\033[1;36m"
 
 class HinhHoc {
 protected:
@@ -25,7 +27,7 @@ public:
     HinhHoc(string _soToSoThua = "", int _khuVuc = 1, int _loaiDat = 1, int _viTriMatTien = 1)
         : soToSoThua(_soToSoThua), khuVuc(_khuVuc), loaiDat(_loaiDat), viTriMatTien(_viTriMatTien) {}
     virtual ~HinhHoc() {}
-    
+
     string getSoToSoThua() const { return soToSoThua; }
     int getLoaiDat() const { return loaiDat; }
     string getKhuVuc() const {
@@ -35,9 +37,21 @@ public:
         else return "Không xác định";
     }
     string getViTriMatTien() const {
-        if (viTriMatTien == 1) return "Mặt tiền lớn"; 
-        else if (viTriMatTien == 2) return "Hẻm ô tô"; 
+        if (viTriMatTien == 1) return "Mặt tiền lớn";
+        else if (viTriMatTien == 2) return "Hẻm ô tô";
         else return "Hẻm nhỏ";
+     }
+
+     double getHeSoKhuVuc() const {
+        if (khuVuc == 1) return 2.0;
+        else if (khuVuc == 2) return 1.5;
+        else return 1.0;
+     }
+
+     double getHeSoMatTien() const {
+        if (viTriMatTien == 1) return 1.2;
+        else if (viTriMatTien == 2) return 1.0;
+        else return 0.8;
      }
 
      //Đa hình
@@ -52,15 +66,15 @@ protected:
 public:
     HinhChuNhat(string _soToSoThua = "", int _khuVuc = 1, int _loaiDat = 1, int _viTriMatTien = 1, double _dai = 0, double _rong = 0)
         : HinhHoc(_soToSoThua, _khuVuc, _loaiDat, _viTriMatTien), dai(_dai), rong(_rong) {}
-    
+
     double tinhDienTich() const override {
         return dai * rong;
     }
-    
+
     double tinhChuVi() const override {
         return 2 * (dai + rong);
     }
-    
+
     string getTenHinh() const override {
         return "Hình chữ nhật";
     }
@@ -72,15 +86,15 @@ private:
 public:
     HinhVuong(string _soToSoThua = "", int _khuVuc = 1, int _loaiDat = 1, int _viTriMatTien = 1, double _canh = 0)
         : HinhHoc(_soToSoThua, _khuVuc, _loaiDat, _viTriMatTien), canh(_canh) {}
-    
+
     double tinhDienTich() const override {
         return canh * canh;
     }
-    
+
     double tinhChuVi() const override {
         return 4.0 * canh;
     }
-    
+
     string getTenHinh() const override {
         return "Hình vuông";
     }
@@ -92,16 +106,16 @@ private:
 public:
     TamGiac(string _soToSoThua = "", int _khuVuc = 1, int _loaiDat = 1, int _viTriMatTien = 1, double _a = 0, double _b = 0, double _c = 0)
         : HinhHoc(_soToSoThua, _khuVuc, _loaiDat, _viTriMatTien), a(_a), b(_b), c(_c) {}
-    
+
     double tinhDienTich() const override {
         double p = (a + b + c) / 2.0;
         return sqrt(p * (p - a) * (p - b) * (p - c));
     }
-    
+
     double tinhChuVi() const override {
         return a + b + c;
     }
-    
+
     string getTenHinh() const override {
         return "Tam giác";
     }
@@ -127,11 +141,15 @@ public:
 };
 
 int main(){
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+
     HinhHoc *ds[100];
     int n = 0, choice;
     while (1){
+        system("cls");
         cout << CYAN << endl << string(85, '=') << endl << RESET;
-        cout << CYAN < "HỆ THỐNG QUẢN LÝ QUY HOẠCH & THUẾ ĐẤT" << endl << RESET;
+        cout << CYAN << "HỆ THỐNG QUẢN LÝ QUY HOẠCH & THUẾ ĐẤT" << endl << RESET;
         cout << CYAN << string(85, '=') << endl << RESET;
         cout << "1. Xem bản đồ quy hoạch (Danh sách các ô đất có sẵn trên địa bàn)" << endl;
         cout << "2. [Người dân] Chọn ô đất có sẵn trên bản đồ để đăng ký & tính thuế" << endl;
@@ -139,7 +157,7 @@ int main(){
         cout << CYAN << string(85, '-') << endl << RESET;
         cout << "Nhập lựa chọn của bạn: ";
         cin >> choice;
-        
+
         if (choice == 0){
             cout << YELLOW << "Cảm ơn bạn đã sử dụng hệ thống!" << RESET << endl;
             break;
@@ -156,7 +174,7 @@ int main(){
         cin.ignore();
         cin.get();
     }
-    
+
     for (int i = 0; i < n; ++i){
         delete ds[i];
     }
