@@ -9,7 +9,7 @@ protected:
     int SoTo = 0;
     int SoThua = 0;
     int loaiDat = 1;
-    bool matTien = false;
+    int matTien = 1;
 public:
     void NhapKhuVuc(){
         do{
@@ -19,7 +19,7 @@ public:
             cout << "\nNhap khu vuc: ";
             cin >> KhuVuc;
             if (KhuVuc < 1 || KhuVuc > 3)
-                cout << "Khu vuc khong hop le!\n";
+                cout << "Khu vuc khong hop le! Nhap lai. \n";
         }while(KhuVuc < 1 || KhuVuc > 3);
     }
     string LayTenKhuVuc()const{
@@ -37,7 +37,7 @@ public:
             cin >> SoTo;
 
             if (SoTo <= 0)
-                cout << "So to khong hop le!\n";
+                cout << "So to khong hop le! Nhap lai. \n";
         }while(SoTo <= 0);
     }
 
@@ -47,7 +47,7 @@ public:
             cin >> SoThua;
 
             if (SoThua <= 0)
-                cout << "So thua khong hop le!\n";
+                cout << "So thua khong hop le! Nhap lai. \n";
         }while(SoThua <= 0);
     }
 
@@ -60,7 +60,7 @@ public:
             cin >> loaiDat;
             
             if (loaiDat < 1 || loaiDat > 3)
-                cout << "Loai dat khong hop le!\n";
+                cout << "Loai dat khong hop le! Nhap lai.\n";
         }while (loaiDat < 1 || loaiDat > 3);
     }
     string LayTenLoaiDat() const{
@@ -73,26 +73,35 @@ public:
     }
 
     void NhapMatTien(){
-        int chon;
+       do{
+        cout << "\n1. Mat tien lon - Tang 20% ";
+        cout << "\n2. Hem oto - Gia binh thuong";
+        cout << "\n3. Hem nho - Giam 20%";
+        cout << "\n Chon loai mat tien: ";
+        cin >> matTien;
 
-        do{
-            cout << "\n Dat co mat tien khong?";
-            cout << "\n1. Co";
-            cout << "\n0. Khong";
-            cout << "\n Lua chon: ";
-            cin >> chon;
-
-            if(chon != 0 && chon != 1)
-                cout << "Lua chon khong hop le! Nhap lai\n";
-        }while(chon != 0 && chon != 1);
-
-        matTien = (chon == 1);
+        if(matTien < 1 || matTien > 3)
+            cout << "Loai mat tien khong hop le! Nhap lai. \n";
+       }while(matTien < 1 || matTien > 3);
     }
+    string LayTenMatTien()const{
+        switch(matTien){
+            case 1: return "Mat tien lon";
+            case 2: return "Hem oto";
+            case 3: return "Hem nho";
+            default: return "Chua xac dinh";
 
-    bool CoMatTien()const{
-        return matTien;
+        }
     }
-
+//Hệ số điều chỉnh theo vị trí mặt tiền
+double HeSoMatTien ()const{
+    switch(matTien){
+        case 1: return 1.2;
+        case 2: return 1.0;
+        case 3: return 0.8;
+        default: return 1.0;
+    }
+}
     //Nhập xuất thông tin
     void NhapThongTin(){
         NhapKhuVuc();
@@ -107,7 +116,7 @@ public:
         cout << "\n So thua: " << SoThua;
         cout << "\n Khu vuc: " << LayTenKhuVuc();
         cout << "\n Loai dat: " << LayTenLoaiDat();
-        cout << "\n Mat tien: " << (matTien ? "Co" : "Khong");
+        cout << "\n Mat tien: " << LayTenMatTien();
     }
 };
 
