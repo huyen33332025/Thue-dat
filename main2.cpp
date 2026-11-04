@@ -6,6 +6,7 @@
 #include <fstream>
 #include <windows.h>
 #include <cstdlib>
+#include <sstream>
 
 using namespace std;
 
@@ -35,7 +36,7 @@ void inO(string s, int doRong) {
 
 string vietHoa(string s){
     for (char &c : s) {
-        c = toupper(c);
+        c = toupper((unsigned char)c);
     }
     return s;
 }
@@ -333,9 +334,8 @@ public:
         }
     }
 
-    void themLoDatMoi() {
-        cout << "Nhập mã số tờ và số thửa mới (VD: V001-01): ";
-        cin >> soToSoThua;
+    void themLoDatMoi(string ma) {
+        soToSoThua = ma;
         cout << "Nhập khu vực (1: Trung tâm, 2: Ngoại ô, 3: Nông thôn): ";
         khuVuc = getValidInteger(1, 3);
         cout << "Nhập mục đích quy hoạch (1: Đất ở, 2: Đất kinh doanh, 3: Đất lấn chiếm): ";
@@ -648,8 +648,12 @@ int chonLoDat(HinhHoc* ds[], int n, string tenChucNang) {
             continue;
         }
         if (choice[0] == '#') {
-            int stt = stoi(choice.substr(1));
-            if (stt >= 1 && stt <= n) return stt - 1;
+            string so = choice.substr(1);
+            istringstream iss(so);
+            int stt;
+            if (!so.empty() && (iss >> stt) && stt >= 1 && (iss >> ws).eof() && stt <= n) {
+                return stt - 1;
+            }
             cout << RED << "STT không hợp lệ! Vui lòng thử lại." << RESET << endl;
             continue;
         }
@@ -768,7 +772,7 @@ void themLoDat(HinhHoc* ds[], int& n) {
     else if (loaiHinh == 3) datMoi = new TamGiac();
     else if (loaiHinh == 4) datMoi = new HinhTron();
 
-    datMoi->themLoDatMoi();
+    datMoi->themLoDatMoi(maMoi);
     ds[n++] = datMoi;
     luuTatCaVaoFile(ds, n);
     cout << GREEN << "Thêm ô đất mới thành công!" << RESET << endl;
