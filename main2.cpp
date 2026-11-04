@@ -10,7 +10,7 @@
 using namespace std;
 
 const double PI = acos(-1.0);
-string matKhauCanBo = "123456"; // Mật khẩu mặc định
+const int soDatMoiTrang = 10;
 
 #define RESET  "\033[0m"
 #define RED    "\033[1;31m"
@@ -18,6 +18,7 @@ string matKhauCanBo = "123456"; // Mật khẩu mặc định
 #define YELLOW "\033[1;33m"
 #define CYAN   "\033[1;36m"
 
+string matKhauCanBo;
 // ================= HÀM TIỆN ÍCH NHẬP LIỆU & IN BẢNG =================
 
 // Hàm in một ô chữ để các cột trong bảng thẳng hàng (bỏ qua byte dấu tiếng Việt)
@@ -30,6 +31,13 @@ void inO(string s, int doRong) {
     for (int i = 0; i < doRong - soKyTu; i++) {
         cout << " ";
     }
+}
+
+string vietHoa(string s){
+    for (char &c : s) {
+        c = toupper(c);
+    }
+    return s;
 }
 
 // Nhập số nguyên an toàn trong đoạn [minVal, maxVal]
@@ -457,13 +465,13 @@ void docBanDo(HinhHoc* ds[], int& n) {
 
 // ================= CÁC CHỨC NĂNG HIỂN THỊ & THAO TÁC =================
 
-void xemBanDo(HinhHoc* ds[], int n) {
-    if (n == 0) {
-        cout << RED << "Bản đồ quy hoạch hiện đang trống! Vui lòng thêm ô đất mới!" << RESET << endl;
-        return;
-    }
+void inMotTrang(HinhHoc* ds[], int n, int trang){
+    int dau = trang * soDatMoiTrang;
+    int cuoi = min(dau + soDatMoiTrang, n);
+    int tongSoTrang = (n + soDatMoiTrang - 1) / soDatMoiTrang;
+
     cout << CYAN << endl << string(122, '=') << endl;
-    cout << "--- BẢN ĐỒ QUY HOẠCH CÁC Ô ĐẤT CÓ SẴN TRÊN ĐỊA BÀN ---" << endl;
+    cout << "--- BẢN ĐỒ QUY HOẠCH CÁC Ô ĐẤT CÓ SẴN TRÊN ĐỊA BÀN (Trang " << (trang + 1) << "/" << tongSoTrang << ") ---" << endl;
     cout << string(122, '=') << endl << RESET;
 
     cout << YELLOW;
@@ -476,9 +484,10 @@ void xemBanDo(HinhHoc* ds[], int n) {
     inO("Mục đích sử dụng", 18);
     inO("Trạng thái", 25);
     cout << RESET << endl;
+    cout << CYAN << string(122, '-') << endl;
 
-    for (int i = 0; i < n; i++) {
-        inO(to_string(i + 1), 6);
+    for (int i = dau; i < cuoi; i++) {
+        inO("#" + to_string(i + 1), 6);
         inO(ds[i]->getSoToSoThua(), 16);
         inO(ds[i]->getTenHinh(), 16);
 
@@ -492,29 +501,92 @@ void xemBanDo(HinhHoc* ds[], int n) {
         inO(ds[i]->getTenTrangThai(), 25);
         cout << endl;
     }
+    cout << CYAN << string(122, '-') << endl << RESET;
+}
+
+void xemBanDo(HinhHoc* ds[], int n) {
+    if (n == 0) {
+        cout << RED << "Bản đồ quy hoạch hiện đang trống!" << RESET << endl;
+        return;
+    }
+
+    int trang = 0;
+    int tongSoTrang = (n + soDatMoiTrang - 1) / soDatMoiTrang;
+
+while (true) {
+        inMotTrang(ds, n, trang);
+        if (tongSoTrang <= 1) break;
+
+        if (trang == 0) {
+            cout << CYAN << "Điều hướng trang [1: Trang sau | 0: Đóng danh sách]: " << RESET;
+            int chon = getValidInteger(0, 1);
+            if (chon == 0) break;
+            else if (chon == 1) trang++;
+        }
+        else if (trang == tongSoTrang - 1) {
+            cout << CYAN << "Điều hướng trang [1: Trang trước | 0: Đóng danh sách]: " << RESET;
+            int chon = getValidInteger(0, 1);
+            if (chon == 0) break;
+            else if (chon == 1) trang--;
+        }
+        else {
+            cout << CYAN << "Điều hướng trang [1: Trang sau | 2: Trang trước | 0: Đóng danh sách]: " << RESET;
+            int chon = getValidInteger(0, 2);
+            if (chon == 0) break;
+            else if (chon == 1) trang++;
+            else if (chon == 2) trang--;
+        }
+    }
+}
+
+int chonLoDat(HinhHoc* ds[], int n, string tenChucNang) {
+    if (n == 0) {
+        cout << RED << "Bản đồ hiện đang trống, không có ô đất để " << tenChucNang << "!" << RESET << endl;
+        return -1;
+    }
+
+    while (1){
+        cout << endl << "Nhập " << YELLOW << "Mã số tờ - số thửa (VD: V001-01)" << RESET << " hoặc " << YELLOW << "#STT" << RESET << " (1 - " << n << ") (VD: #1) của ô đất muốn " << tenChucNang << " (nhập " << CYAN << "?" << RESET << " để xem danh sách, " << RED << "0" << RESET << " để huỷ): ";
+        string choice;
+        cin >> choice;
+
+        if (choice == "0") return -1;
+        if (choice == "?") {
+            xemBanDo(ds, n);
+            continue;
+        }
+        if (choice[0] == '#') {
+            int stt = stoi(choice.substr(1));
+            if (stt >= 1 && stt <= n) return stt - 1;
+            cout << RED << "STT không hợp lệ! Vui lòng thử lại." << RESET << endl;
+            continue;
+        }
+
+        string maSo = vietHoa(choice);
+        for (int i = 0;i < n;i++){
+            if (vietHoa(ds[i]->getSoToSoThua()) == maSo) {
+                return i;
+            }
+        }
+        cout << RED << "Không tìm thấy ô đất với mã số [" << maSo << "]! Vui lòng thử lại." << RESET << endl;
+    }
 }
 
 void timKiemLoDat(HinhHoc* ds[], int n) {
-    if (n == 0) {
-        cout << RED << "Bản đồ trống, không có ô đất để tra cứu!" << RESET << endl;
-        return;
-    }
-    string maTim;
-    cout << "Nhập mã số tờ và số thửa cần tìm (VD: V001-01): ";
-    cin >> maTim;
+    int viTri = chonLoDat(ds, n, "tra cứu");
+    if (viTri < 0) return;
 
-    for (int i = 0; i < n; i++) {
-        if (ds[i]->getSoToSoThua() == maTim) {
-            cout << GREEN << endl << "✓ TÌM THẤY THÔNG TIN Ô ĐẤT [" << maTim << " - " << ds[i]->getTenHinh() << "]:" << RESET << endl;
-            cout << "1. Diện tích: " << fixed << setprecision(2) << ds[i]->tinhDienTich() << " m2" << endl;
-            cout << "2. Khu vực: " << ds[i]->getTenKhuVuc() << endl;
-            cout << "3. Vị trí mặt tiền: " << ds[i]->getTenViTri() << endl;
-            cout << "4. Mục đích quy hoạch: " << ds[i]->getTenLoaiDat() << endl;
-            cout << "5. Trạng thái: " << ds[i]->getTenTrangThai() << endl;
-            return;
-        }
+    HinhHoc* dat = ds[viTri];
+    cout << GREEN << endl << "✓ TÌM THẤY THÔNG TIN Ô ĐẤT [#" << (viTri + 1) << " | " << dat->getSoToSoThua() << " - " << dat->getTenHinh() << "]:" << RESET << endl;
+    cout << "1. Diện tích         : " << fixed << setprecision(2) << dat->tinhDienTich() << " m2" << endl;
+    cout << "2. Khu vực           : " << dat->getTenKhuVuc() << endl;
+    cout << "3. Vị trí mặt tiền   : " << dat->getTenViTri() << endl;
+    cout << "4. Mục đích quy hoạch: " << dat->getTenLoaiDat() << endl;
+    cout << "5. Trạng thái        : " << dat->getTenTrangThai() << endl;
+    if (dat->getDaCoChu()) {
+        cout << "6. Thuế phát sinh    : " << fixed << setprecision(0) << dat->tinhThue() << " VND (Miễn giảm: " << dat->getMienGiam() << "%)" << endl;
+        cout << "=> THUẾ PHẢI NỘP     : " << YELLOW << fixed << setprecision(0) << dat->thuePhaiNop() << " VND" << RESET << endl;
     }
-    cout << RED << "Không tìm thấy ô đất nào có mã số: " << maTim << RESET << endl;
 }
 
 void thongKeBaoCao(HinhHoc* ds[], int n) {
@@ -537,15 +609,10 @@ void thongKeBaoCao(HinhHoc* ds[], int n) {
 }
 
 void khaiThue(HinhHoc* a[], int n) {
-    if (n == 0) {
-        cout << RED << "Chưa có dữ liệu ô đất để kê khai!" << RESET << endl;
-        return;
-    }
-    cout << "Nhập số thứ tự ô đất muốn khai thuế (1-" << n << ", nhập 0 để huỷ): ";
-    int stt = getValidInteger(0, n);
-    if (stt == 0) return;
+    int idx = chonLoDat(a, n, "khai thuế");
+    if (idx < 0) return;
 
-    HinhHoc* dat = a[stt - 1];
+    HinhHoc* dat = a[idx];
     if (dat->getDaCoChu()) {
         cout << RED << "Ô đất này đã có chủ (" << dat->getChuSuDung() << ")! Không thể khai thuế tiếp." << RESET << endl;
         return;
@@ -554,8 +621,8 @@ void khaiThue(HinhHoc* a[], int n) {
     dat->keKhaiChuSuDung();
     if (!dat->getDaCoChu()) return;
 
-    luuTatCaVaoFile(a, n); // Lưu ngay vào file để không bị mất khi thoát
-    cout << GREEN << "Đã lưu thông tin kê khai thuế vào cơ sở dữ liệu!" << RESET << endl;
+    luuTatCaVaoFile(a, n);
+    cout << GREEN << "Đã lưu thông tin kê khai thuế!" << RESET << endl;
 
     cout << GREEN << endl << "--- BIÊN LAI THUẾ LÔ ĐẤT [" << dat->getSoToSoThua() << "] ---" << RESET << endl;
     cout << "1. Chủ sử dụng         : " << dat->getChuSuDung() << endl;
@@ -575,9 +642,34 @@ void themLoDat(HinhHoc* ds[], int& n) {
         cout << RED << "Bản đồ đã đầy (tối đa 100 ô đất)! Không thể thêm tiếp." << RESET << endl;
         return;
     }
-    cout << endl << "Chọn hình dáng ô đất mới (1: Hình chữ nhật | 2: Hình vuông | 3: Tam giác | 4: Hình tròn): ";
-    int loaiHinh = getValidInteger(1, 4);
 
+    string maMoi;
+    while (true) {
+        cout << endl << "Nhập mã số tờ và số thửa mới (VD: V001-01 | nhập " << CYAN << "?" << RESET << " để xem DS, " << RED << "0" << RESET << " để huỷ): ";
+        cin >> maMoi;
+        if (maMoi == "0") return;
+        if (maMoi == "?") {
+            xemBanDo(ds, n);
+            continue;
+        }
+        if (maMoi[0] == '#') {
+            cout << RED << "Mã số tờ/thửa không được bắt đầu bằng dấu '#'!" << RESET << endl;
+            continue;
+        }
+        bool biTrung = false;
+        for (int i = 0; i < n; i++) {
+            if (vietHoa(ds[i]->getSoToSoThua()) == vietHoa(maMoi)) {
+                cout << RED << "Lỗi: Mã số thửa [" << maMoi << "] đã tồn tại ở STT #" << (i + 1) << "! Hãy nhập mã khác." << RESET << endl;
+                biTrung = true;
+                break;
+            }
+        }
+        if (!biTrung) break;
+    }
+
+    cout << "Chọn hình dáng ô đất mới (1: Hình chữ nhật | 2: Hình vuông | 3: Tam giác | 4: Hình tròn): ";
+    int loaiHinh = getValidInteger(1, 4);
+    if (loaiHinh == 0) return;
     HinhHoc* datMoi = NULL;
     if (loaiHinh == 1) datMoi = new HinhChuNhat();
     else if (loaiHinh == 2) datMoi = new HinhVuong();
@@ -585,54 +677,32 @@ void themLoDat(HinhHoc* ds[], int& n) {
     else if (loaiHinh == 4) datMoi = new HinhTron();
 
     datMoi->themLoDatMoi();
-
-    for (int i = 0; i < n; i++) {
-        if (ds[i]->getSoToSoThua() == datMoi->getSoToSoThua()) {
-            cout << RED << "Lỗi: Mã số thửa [" << datMoi->getSoToSoThua() << "] đã tồn tại! Huỷ thao tác." << RESET << endl;
-            delete datMoi;
-            return;
-        }
-    }
-
     ds[n++] = datMoi;
     luuTatCaVaoFile(ds, n);
-    cout << GREEN << "Thêm ô đất mới thành công và đã lưu vào file!" << RESET << endl;
+    cout << GREEN << "Thêm ô đất mới thành công!" << RESET << endl;
 }
 
 void suaLoDat(HinhHoc* ds[], int n) {
-    if (n == 0) {
-        cout << RED << "Bản đồ trống, không có ô đất để sửa!" << RESET << endl;
-        return;
-    }
-    xemBanDo(ds, n);
-    cout << endl << "Nhập STT ô đất muốn sửa (1-" << n << ", 0 để huỷ): ";
-    int stt = getValidInteger(0, n);
-    if (stt == 0) return;
-
-    ds[stt - 1]->suaThongTin();
+    int idx = chonLoDat(ds, n, "chỉnh sửa");
+    if (idx < 0) return;
+    ds[idx]->suaThongTin();
     luuTatCaVaoFile(ds, n);
-    cout << GREEN << "Đã cập nhật và lưu thay đổi vào cơ sở dữ liệu!" << RESET << endl;
+    cout << GREEN << "Đã cập nhật thành công!" << RESET << endl;
 }
 
 void xoaLoDat(HinhHoc* ds[], int& n) {
-    if (n == 0) {
-        cout << RED << "Bản đồ trống, không có ô đất để xoá!" << RESET << endl;
-        return;
-    }
-    xemBanDo(ds, n);
-    cout << endl << "Nhập STT ô đất muốn xoá (1-" << n << ", 0 để huỷ): ";
-    int stt = getValidInteger(0, n);
-    if (stt == 0) return;
+    int idx = chonLoDat(ds, n, "xoá");
+    if (idx < 0) return;
 
-    cout << YELLOW << "Bạn có chắc chắn muốn xoá ô đất [" << ds[stt - 1]->getSoToSoThua() << "]? (1: Có | 0: Huỷ): " << RESET;
+    cout << YELLOW << "Bạn có chắc chắn muốn xoá ô đất [" << ds[idx]->getSoToSoThua() << "]? (1: Có | 0: Huỷ): " << RESET;
     if (getValidInteger(0, 1) == 1) {
-        delete ds[stt - 1];
-        for (int i = stt - 1; i < n - 1; i++) {
+        delete ds[idx];
+        for (int i = idx; i < n - 1; i++) {
             ds[i] = ds[i + 1];
         }
         n--;
         luuTatCaVaoFile(ds, n);
-        cout << GREEN << "Xoá ô đất thành công và đã cập nhật lại file!" << RESET << endl;
+        cout << GREEN << "Xoá ô đất thành công!" << RESET << endl;
     }
     else {
         cout << "Đã huỷ thao tác xoá." << endl;
@@ -640,16 +710,10 @@ void xoaLoDat(HinhHoc* ds[], int& n) {
 }
 
 void xoaKhaiThue(HinhHoc* ds[], int n) {
-    if (n == 0) {
-        cout << RED << "Bản đồ trống!" << RESET << endl;
-        return;
-    }
-    xemBanDo(ds, n);
-    cout << endl << "Nhập STT ô đất muốn huỷ kê khai thuế (1-" << n << ", 0 để huỷ): ";
-    int stt = getValidInteger(0, n);
-    if (stt == 0) return;
+    int idx = chonLoDat(ds, n, "xoá kê khai thuế");
+    if (idx < 0) return;
 
-    HinhHoc* dat = ds[stt - 1];
+    HinhHoc* dat = ds[idx];
     if (!dat->getDaCoChu()) {
         cout << RED << "Ô đất này hiện chưa có chủ để xoá kê khai!" << RESET << endl;
         return;
