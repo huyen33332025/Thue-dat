@@ -161,7 +161,7 @@ public:
     }
 
     string getTenTrangThai() const {
-        if (daCoChu) return "Đã có chủ (" + chuSuDung + ")";
+        if (daCoChu) return "Đã có chủ";
         return "Chưa có";
     }
 
