@@ -19,7 +19,7 @@ const int soDatMoiTrang = 10;
 #define YELLOW "\033[1;33m"
 #define CYAN   "\033[1;36m"
 
-string matKhauCanBo;
+string matKhauCanBo = "";
 // ================= HÀM TIỆN ÍCH NHẬP LIỆU & IN BẢNG =================
 
 // Hàm in một ô chữ để các cột trong bảng thẳng hàng (bỏ qua byte dấu tiếng Việt)
@@ -131,17 +131,20 @@ public:
     }
     virtual ~HinhHoc() {}
 
-    string getSoToSoThua() const { return soToSoThua; }
-    bool getDaCoChu() const { return daCoChu; }
-    string getChuSuDung() const { return chuSuDung; }
-    double getMienGiam() const { return mienGiamTheoDoiTuong; }
-    int getLoaiDat() const { return loaiDat; }
-
     void setChuSuDung(bool _daCoChu, string _chuSuDung, double _mienGiam) {
         daCoChu = _daCoChu;
         chuSuDung = _chuSuDung;
         mienGiamTheoDoiTuong = _mienGiam;
     }
+
+    void setSoToSoThua(string _soToSoThua) { soToSoThua = _soToSoThua; }
+
+
+    string getSoToSoThua() const { return soToSoThua; }
+    bool getDaCoChu() const { return daCoChu; }
+    string getChuSuDung() const { return chuSuDung; }
+    double getMienGiam() const { return mienGiamTheoDoiTuong; }
+    int getLoaiDat() const { return loaiDat; }
 
     string getTenKhuVuc() const {
         if (khuVuc == 1) return "Trung tâm";
@@ -200,11 +203,46 @@ public:
     }
 
     virtual double tinhDienTich() const = 0;
+    virtual double tinhChuVi() const = 0;
     virtual string getTenHinh() const = 0;
     virtual double getHeSoHinhDang() const = 0;
     virtual void nhapKichThuoc() = 0;
     virtual void ghiVaoFile(ofstream& f) const = 0;
+    virtual void xuatKichThuoc(ostream& w) const = 0;
 
+    friend istream& operator>>(istream& is, HinhHoc& h) {
+        cout << "Nhập khu vực (1: Trung tâm, 2: Ngoại ô, 3: Nông thôn): ";
+        h.khuVuc = getValidInteger(1, 3);
+        cout << "Nhập mục đích quy hoạch (1: Đất ở, 2: Đất kinh doanh, 3: Đất lấn chiếm): ";
+        h.loaiDat = getValidInteger(1, 3);
+        cout << "Nhập vị trí mặt tiền (1: Mặt tiền lớn, 2: Hẻm ô tô, 3: Hẻm nhỏ): ";
+        h.viTriMatTien = getValidInteger(1, 3);
+        h.daCoChu = false;
+        h.chuSuDung = "Chưa có";
+        h.mienGiamTheoDoiTuong = 0.0;
+
+        h.nhapKichThuoc();
+        return is;
+    }
+
+    friend ostream& operator<<(ostream& os, const HinhHoc& h) {
+        os << GREEN << "\n--- THÔNG TIN CHI TIẾT Ô ĐẤT [" << h.soToSoThua << " - " << h.getTenHinh() << "] ---" << RESET << "\n";
+        os << "1. Kích thước đặc trưng: ";
+        h.xuatKichThuoc(os); 
+        os << "\n";
+        os << "2. Diện tích         : " << fixed << setprecision(2) << h.tinhDienTich() << " m2 (Hệ số hình dáng: " << h.getHeSoHinhDang() << ")\n";
+        os << "3. Khu vực           : " << h.getTenKhuVuc() << "\n";
+        os << "4. Vị trí mặt tiền   : " << h.getTenViTri() << "\n";
+        os << "5. Mục đích quy hoạch: " << h.getTenLoaiDat() << "\n";
+        os << "6. Trạng thái        : " << (h.daCoChu ? ("Đã có chủ (" + h.chuSuDung + ")") : "Chưa có chủ") << "\n";
+        
+        if (h.daCoChu) {
+            os << "7. Thuế phát sinh    : " << fixed << setprecision(0) << h.tinhThue() << " VND\n";
+            os << "8. Miễn giảm         : " << fixed << setprecision(0) << h.mienGiamTheoDoiTuong << " %\n";
+            os << "=> THUẾ PHẢI NỘP     : " << YELLOW << fixed << setprecision(0) << h.thuePhaiNop() << " VND" << RESET << "\n";
+        }
+        return os;
+    }
     double tinhThue() const {
         return tinhThueLuyTien() * getHeSoHinhDang();
     }
@@ -334,20 +372,6 @@ public:
         }
     }
 
-    void themLoDatMoi(string ma) {
-        soToSoThua = ma;
-        cout << "Nhập khu vực (1: Trung tâm, 2: Ngoại ô, 3: Nông thôn): ";
-        khuVuc = getValidInteger(1, 3);
-        cout << "Nhập mục đích quy hoạch (1: Đất ở, 2: Đất kinh doanh, 3: Đất lấn chiếm): ";
-        loaiDat = getValidInteger(1, 3);
-        cout << "Nhập vị trí mặt tiền (1: Mặt tiền lớn, 2: Hẻm ô tô, 3: Hẻm nhỏ): ";
-        viTriMatTien = getValidInteger(1, 3);
-        daCoChu = false;
-        chuSuDung = "Chưa có";
-        mienGiamTheoDoiTuong = 0.0;
-        nhapKichThuoc();
-    }
-
     void suaThongTin() {
         while (true) {
             cout << CYAN << endl << "--- CHỈNH SỬA THÔNG TIN Ô ĐẤT [" << soToSoThua << "] ---" << endl << RESET;
@@ -406,6 +430,10 @@ public:
         rong = getValidDouble();
     }
 
+    void xuatKichThuoc(ostream& os) const override {
+        os << "Dài = " << dai << "m, Rộng = " << rong << "m";
+    }
+
     void ghiVaoFile(ofstream& f) const override {
         f << "\nHCN " << soToSoThua << " " << khuVuc << " " << loaiDat << " " << viTriMatTien << " " << dai << " " << rong;
     }
@@ -428,6 +456,10 @@ public:
     void nhapKichThuoc() override {
         cout << "Nhập chiều dài cạnh (m): ";
         canh = getValidDouble();
+    }
+
+    void xuatKichThuoc(ostream& os) const override {
+        os << "Cạnh = " << canh << "m";
     }
 
     void ghiVaoFile(ofstream& f) const override {
@@ -466,6 +498,10 @@ public:
         }
     }
 
+    void xuatKichThuoc(ostream& os) const override {
+        os << "Ba cạnh a = " << a << "m, Cạnh b = " << b << "m, Cạnh c = " << c << "m";
+    }
+
     void ghiVaoFile(ofstream& f) const override {
         f << "\nTG " << soToSoThua << " " << khuVuc << " " << loaiDat << " " << viTriMatTien << " " << a << " " << b << " " << c;
     }
@@ -484,6 +520,10 @@ public:
     void nhapKichThuoc() override {
         cout << "Nhập bán kính ô đất (m): ";
         banKinh = getValidDouble();
+    }
+
+    void xuatKichThuoc(ostream& os) const override {
+         os << "Bán kính R = " << banKinh << "m";
     }
 
     void ghiVaoFile(ofstream& f) const override {
@@ -672,17 +712,7 @@ void timKiemLoDat(HinhHoc* ds[], int n) {
     int viTri = chonLoDat(ds, n, "tra cứu");
     if (viTri < 0) return;
 
-    HinhHoc* dat = ds[viTri];
-    cout << GREEN << endl << "✓ TÌM THẤY THÔNG TIN Ô ĐẤT [#" << (viTri + 1) << " | " << dat->getSoToSoThua() << " - " << dat->getTenHinh() << "]:" << RESET << endl;
-    cout << "1. Diện tích         : " << fixed << setprecision(2) << dat->tinhDienTich() << " m2" << endl;
-    cout << "2. Khu vực           : " << dat->getTenKhuVuc() << endl;
-    cout << "3. Vị trí mặt tiền   : " << dat->getTenViTri() << endl;
-    cout << "4. Mục đích quy hoạch: " << dat->getTenLoaiDat() << endl;
-    cout << "5. Trạng thái        : " << dat->getTenTrangThai() << endl;
-    if (dat->getDaCoChu()) {
-        cout << "6. Thuế phát sinh    : " << fixed << setprecision(0) << dat->tinhThue() << " VND (Miễn giảm: " << dat->getMienGiam() << "%)" << endl;
-        cout << "=> THUẾ PHẢI NỘP     : " << YELLOW << fixed << setprecision(0) << dat->thuePhaiNop() << " VND" << RESET << endl;
-    }
+    cout << *ds[viTri];
 }
 
 void thongKeBaoCao(HinhHoc* ds[], int n) {
@@ -720,15 +750,7 @@ void khaiThue(HinhHoc* a[], int n) {
     luuTatCaVaoFile(a, n);
     cout << GREEN << "Đã lưu thông tin kê khai thuế!" << RESET << endl;
 
-    cout << GREEN << endl << "--- BIÊN LAI THUẾ LÔ ĐẤT [" << dat->getSoToSoThua() << "] ---" << RESET << endl;
-    cout << "1. Chủ sử dụng         : " << dat->getChuSuDung() << endl;
-    cout << "2. Diện tích           : " << fixed << setprecision(2) << dat->tinhDienTich() << " m2" << endl;
-    cout << "3. Khu vực             : " << dat->getTenKhuVuc() << endl;
-    cout << "4. Vị trí mặt tiền     : " << dat->getTenViTri() << endl;
-    cout << "5. Mục đích sử dụng    : " << dat->getTenLoaiDat() << endl;
-    cout << "6. Thuế phát sinh      : " << fixed << setprecision(0) << dat->tinhThue() << " VND" << endl;
-    cout << "7. Miễn giảm           : " << dat->getMienGiam() << " %" << endl;
-    cout << "=> THUẾ PHẢI NỘP       : " << YELLOW << fixed << setprecision(0) << dat->thuePhaiNop() << " VND" << RESET << endl;
+    cout << *a[idx];
 }
 
 // ================= CÁC TÁC VỤ CỦA CÁN BỘ =================
@@ -772,7 +794,8 @@ void themLoDat(HinhHoc* ds[], int& n) {
     else if (loaiHinh == 3) datMoi = new TamGiac();
     else if (loaiHinh == 4) datMoi = new HinhTron();
 
-    datMoi->themLoDatMoi(maMoi);
+    datMoi->setSoToSoThua(maMoi);
+    cin >> *datMoi;
     ds[n++] = datMoi;
     luuTatCaVaoFile(ds, n);
     cout << GREEN << "Thêm ô đất mới thành công!" << RESET << endl;
