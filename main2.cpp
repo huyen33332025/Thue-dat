@@ -219,26 +219,118 @@ public:
         cout << "2. Khu vực: " << getTenKhuVuc() << endl;
         cout << "3. Vị trí mặt tiền: " << getTenViTri() << endl;
         cout << "4. Mục đích quy hoạch: " << getTenLoaiDat() << endl;
+        cout << YELLOW << "(Lưu ý: Trong quá trình nhập, gõ 0 để Huỷ kê khai, gõ 9 để Quay lại bước trước)" << RESET << endl;
+        string tenTam = "";
+        int chonLoai = 0;
+        int doiTuong = 0;
+        double mienGiamTam = 0.0;
 
-        cout << "Nhập họ và tên chủ sở hữu: ";
-        getline(cin >> ws, chuSuDung);
+        int buoc = 1;
+        while (buoc >= 1 && buoc <= 4) {
+            // ==================== BƯỚC 1: NHẬP HỌ TÊN ====================
+            if (buoc == 1) {
+                cout << endl << "[Bước 1/3] Nhập họ và tên chủ sở hữu (nhập " << RED << "0" << RESET << " để huỷ): ";
+                getline(cin >> ws, tenTam);
 
-        cout << "Xác nhận mục đích sử dụng đất (1: Đất ở, 2: Đất kinh doanh, 3: Đất lấn chiếm): ";
-        int chonLoai = getValidInteger(1, 3);
-        if (chonLoai != loaiDat) {
-            cout << RED << "LỖI: Mục đích sử dụng bạn chọn không khớp với quy hoạch (" << getTenLoaiDat() << ")! Huỷ kê khai." << RESET << endl;
-            daCoChu = false;
-            return;
+                if (tenTam == "0") {
+                    cout << YELLOW << "Đã huỷ kê khai hồ sơ." << RESET << endl;
+                    daCoChu = false;
+                    return;
+                }
+                buoc = 2;
+            }
+
+            // ==================== BƯỚC 2: XÁC NHẬN MỤC ĐÍCH ====================
+            else if (buoc == 2) {
+                cout << endl << "[Bước 2/3] Xác nhận mục đích sử dụng đất (1: Đất ở | 2: Đất kinh doanh | 3: Đất lấn chiếm | "
+                     << YELLOW << "9: Sửa lại Họ tên" << RESET << " | " << RED << "0: Huỷ" << RESET << "): ";
+
+                int nhap;
+                while (true) {
+                    nhap = getValidInteger(0, 9);
+                    if (nhap <= 3 || nhap == 9) break;
+                    cout << RED << "Vui lòng chọn 1-3, hoặc 9 (Quay lại), 0 (Huỷ): " << RESET;
+                }
+
+                if (nhap == 0) {
+                    cout << YELLOW << "Đã huỷ kê khai hồ sơ." << RESET << endl;
+                    daCoChu = false;
+                    return;
+                }
+                if (nhap == 9) {
+                    buoc = 1;
+                    continue;
+                }
+                if (nhap != loaiDat) {
+                    cout << RED << "CẢNH BÁO: Mục đích bạn chọn không khớp với quy hoạch (" << getTenLoaiDat() << ")! Vui lòng chọn lại hoặc bấm 0 để huỷ." << RESET << endl;
+                    continue;
+                }
+                chonLoai = nhap;
+                buoc = 3;
+            }
+
+            // ==================== BƯỚC 3: ĐỐI TƯỢNG MIỄN GIẢM ====================
+            else if (buoc == 3) {
+                cout << endl << "[Bước 3/3] Chọn đối tượng miễn giảm thuế (1: Không [0%] | 2: Cận nghèo [50%] | 3: Hộ nghèo [100%] | "
+                     << YELLOW << "9: Quay lại Bước 2" << RESET << " | " << RED << "0: Huỷ" << RESET << "): ";
+
+                int nhap;
+                while (true) {
+                    nhap = getValidInteger(0, 9);
+                    if (nhap <= 3 || nhap == 9) break;
+                    cout << RED << "Vui lòng chọn 1-3, hoặc 9 (Quay lại), 0 (Huỷ): " << RESET;
+                }
+
+                if (nhap == 0) {
+                    cout << YELLOW << "Đã huỷ kê khai hồ sơ." << RESET << endl;
+                    daCoChu = false;
+                    return;
+                }
+                if (nhap == 9) {
+                    buoc = 2;
+                    continue;
+                }
+
+                doiTuong = nhap;
+                if (doiTuong == 1) mienGiamTam = 0.0;
+                else if (doiTuong == 2) mienGiamTam = 50.0;
+                else if (doiTuong == 3) mienGiamTam = 100.0;
+
+                buoc = 4;
+            }
+
+            // ==================== BƯỚC 4: XEM TRƯỚC & CHỐT HỒ SƠ ====================
+            else if (buoc == 4) {
+                double thueDuTinh = tinhThue() * (1.0 - mienGiamTam / 100.0);
+                cout << CYAN << endl << "--- KIỂM TRA LẠI THÔNG TIN TRƯỚC KHI LƯU ---" << RESET << endl;
+                cout << "  + Chủ sở hữu        : " << GREEN << tenTam << RESET << endl;
+                cout << "  + Mục đích sử dụng  : " << getTenLoaiDat() << endl;
+                cout << "  + Mức miễn giảm     : " << fixed << setprecision(0) << mienGiamTam << "%" << endl;
+                cout << "  + Thuế phải nộp     : " << YELLOW << fixed << setprecision(0) << thueDuTinh << " VND" << RESET << endl;
+                cout << "Bạn muốn làm gì? (1: Xác nhận lưu | " << YELLOW << "2: Sửa lại Họ tên" << RESET << " | "
+                     << YELLOW << "3: Sửa lại Miễn giảm" << RESET << " | " << RED << "0: Huỷ bỏ" << RESET << "): ";
+
+                int choice = getValidInteger(0, 3);
+                if (choice == 0) {
+                    cout << YELLOW << "Đã huỷ kê khai hồ sơ." << RESET << endl;
+                    daCoChu = false;
+                    return;
+                }
+                else if (choice == 2) {
+                    buoc = 1;
+                }
+                else if (choice == 3) {
+                    buoc = 3;
+                }
+                else if (choice == 1) {
+                    chuSuDung = tenTam;
+                    mienGiamTheoDoiTuong = mienGiamTam;
+                    daCoChu = true;
+                    cout << GREEN << "Khai thuế thành công!" << RESET << endl;
+                    break;
+                }
+            }
         }
-
-        cout << "Chọn đối tượng miễn giảm thuế (1: Không [0%] | 2: Cận nghèo [50%] | 3: Hộ nghèo [100%]): ";
-        int doiTuong = getValidInteger(1, 3);
-        if (doiTuong == 1) mienGiamTheoDoiTuong = 0.0;
-        else if (doiTuong == 2) mienGiamTheoDoiTuong = 50.0;
-        else if (doiTuong == 3) mienGiamTheoDoiTuong = 100.0;
-
-        daCoChu = true;
-        cout << GREEN << "Khai thuế thành công!" << RESET << endl;
     }
 
     void themLoDatMoi() {
@@ -290,7 +382,7 @@ public:
 
 // ================= CÁC LỚP HÌNH HỌC CỤ THỂ =================
 
-class HinhChuNhat : public HinhHoc {
+class HinhChuNhat:public HinhHoc {
     double dai, rong;
 public:
     HinhChuNhat(string st = "", int kv = 1, int ld = 1, int vt = 1, double d = 0, double r = 0)
