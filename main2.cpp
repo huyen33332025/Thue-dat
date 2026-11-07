@@ -260,7 +260,6 @@ public:
         cout << "4. Mục đích quy hoạch: " << getTenLoaiDat() << endl;
         cout << YELLOW << "(Lưu ý: Trong quá trình nhập, gõ 0 để Huỷ kê khai, gõ 9 để Quay lại bước trước)" << RESET << endl;
         string tenTam = "";
-        int chonLoai = 0;
         int doiTuong = 0;
         double mienGiamTam = 0.0;
 
@@ -304,7 +303,6 @@ public:
                     cout << RED << "CẢNH BÁO: Mục đích bạn chọn không khớp với quy hoạch (" << getTenLoaiDat() << ")! Vui lòng chọn lại hoặc bấm 0 để huỷ." << RESET << endl;
                     continue;
                 }
-                chonLoai = nhap;
                 buoc = 3;
             }
 
@@ -413,6 +411,7 @@ public:
         : HinhHoc(st, kv, ld, vt), dai(d), rong(r) {}
 
     double tinhDienTich() const override { return dai * rong; }
+    double tinhChuVi() const override { return 2 * (dai + rong); }
     string getTenHinh() const override { return "Hình chữ nhật"; }
 
     double getHeSoHinhDang() const override {
@@ -446,6 +445,7 @@ public:
         : HinhHoc(st, kv, ld, vt), canh(c) {}
 
     double tinhDienTich() const override { return canh * canh; }
+    double tinhChuVi() const override { return 4.0 * canh; }
     string getTenHinh() const override { return "Hình vuông"; }
 
     double getHeSoHinhDang() const override {
@@ -477,6 +477,8 @@ public:
         double p = (a + b + c) / 2.0;
         return sqrt(p * (p - a) * (p - b) * (p - c));
     }
+
+    double tinhChuVi() const override { return a + b + c; }
 
     string getTenHinh() const override { return "Tam giác"; }
 
@@ -514,6 +516,8 @@ public:
         : HinhHoc(st, kv, ld, vt), banKinh(r) {}
 
     double tinhDienTich() const override { return PI * banKinh * banKinh; }
+    double tinhChuVi() const override { return 2 * PI * banKinh; }
+
     string getTenHinh() const override { return "Hình tròn"; }
     double getHeSoHinhDang() const override { return 0.95; }
 
